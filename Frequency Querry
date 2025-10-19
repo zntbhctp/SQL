@@ -1,0 +1,178 @@
+SELECT
+    COUNT(DISTINCT gsmno, pdate) AS total_cust_count,
+
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    ho_a2, ho_b2, ho_c2, ho_d2, ho_e2, ho_f2, ho_g2, ho_h2,
+    a_last, b_last, c_last, d_last, e_last, f_last, g_last, h_last,
+    dtmf_a2, dtmf_b2, dtmf_c2, dtmf_d2, dtmf_e2, dtmf_f2, dtmf_g2, dtmf_h2,
+    ogun_kaccagri,
+    is_postpaid,
+
+    COUNT(DISTINCT gsmno, pdate) AS gunlukmusadet,
+    COUNT(ogun_kaccagri) AS callcheck,
+    SUM(CASE WHEN endreason_ivr = '1' THEN 1 ELSE 0 END) AS hocallcheck
+
+FROM (
+    SELECT *,
+        MAX(rn_repeat) OVER (PARTITION BY gsmno, pdate ORDER BY rn_repeat DESC) AS ogun_kaccagri,
+
+        -- MEANINGFUL
+        MAX(a) OVER (PARTITION BY gsmno, pdate) AS a2,
+        MAX(b) OVER (PARTITION BY gsmno, pdate) AS b2,
+        MAX(c) OVER (PARTITION BY gsmno, pdate) AS c2,
+        MAX(d) OVER (PARTITION BY gsmno, pdate) AS d2,
+        MAX(e) OVER (PARTITION BY gsmno, pdate) AS e2,
+        MAX(f) OVER (PARTITION BY gsmno, pdate) AS f2,
+        MAX(g) OVER (PARTITION BY gsmno, pdate) AS g2,
+        MAX(h) OVER (PARTITION BY gsmno, pdate) AS h2,
+
+        -- LAST INTENT
+        MAX(a_last) OVER (PARTITION BY gsmno, pdate) AS a_last,
+        MAX(b_last) OVER (PARTITION BY gsmno, pdate) AS b_last,
+        MAX(c_last) OVER (PARTITION BY gsmno, pdate) AS c_last,
+        MAX(d_last) OVER (PARTITION BY gsmno, pdate) AS d_last,
+        MAX(e_last) OVER (PARTITION BY gsmno, pdate) AS e_last,
+        MAX(f_last) OVER (PARTITION BY gsmno, pdate) AS f_last,
+        MAX(g_last) OVER (PARTITION BY gsmno, pdate) AS g_last,
+        MAX(h_last) OVER (PARTITION BY gsmno, pdate) AS h_last,
+
+        -- HO
+        MAX(ho_a) OVER (PARTITION BY gsmno, pdate) AS ho_a2,
+        MAX(ho_b) OVER (PARTITION BY gsmno, pdate) AS ho_b2,
+        MAX(ho_c) OVER (PARTITION BY gsmno, pdate) AS ho_c2,
+        MAX(ho_d) OVER (PARTITION BY gsmno, pdate) AS ho_d2,
+        MAX(ho_e) OVER (PARTITION BY gsmno, pdate) AS ho_e2,
+        MAX(ho_f) OVER (PARTITION BY gsmno, pdate) AS ho_f2,
+        MAX(ho_g) OVER (PARTITION BY gsmno, pdate) AS ho_g2,
+        MAX(ho_h) OVER (PARTITION BY gsmno, pdate) AS ho_h2,
+
+        -- DTMF
+        MAX(CASE WHEN rn_repeat = 1 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_a2,
+        MAX(CASE WHEN rn_repeat = 2 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_b2,
+        MAX(CASE WHEN rn_repeat = 3 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_c2,
+        MAX(CASE WHEN rn_repeat = 4 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_d2,
+        MAX(CASE WHEN rn_repeat = 5 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_e2,
+        MAX(CASE WHEN rn_repeat = 6 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_f2,
+        MAX(CASE WHEN rn_repeat = 7 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_g2,
+        MAX(CASE WHEN rn_repeat = 8 AND is_dtmf = 1 THEN 1 ELSE NULL END) OVER (PARTITION BY gsmno, pdate) AS dtmf_h2
+
+    FROM (
+        SELECT
+            pdate,
+            rn_repeat,
+            logmasterid_ivr,
+            gsmno,
+            is_postpaid,
+            is_dtmf,
+            is_smart,
+            endreason_ivr,
+
+            -- MEANINGFUL
+            CASE WHEN rn_repeat = 1 THEN meaningful_intent ELSE NULL END AS a,
+            CASE WHEN rn_repeat = 2 THEN meaningful_intent ELSE NULL END AS b,
+            CASE WHEN rn_repeat = 3 THEN meaningful_intent ELSE NULL END AS c,
+            CASE WHEN rn_repeat = 4 THEN meaningful_intent ELSE NULL END AS d,
+            CASE WHEN rn_repeat = 5 THEN meaningful_intent ELSE NULL END AS e,
+            CASE WHEN rn_repeat = 6 THEN meaningful_intent ELSE NULL END AS f,
+            CASE WHEN rn_repeat = 7 THEN meaningful_intent ELSE NULL END AS g,
+            CASE WHEN rn_repeat = 8 THEN meaningful_intent ELSE NULL END AS h,
+
+            -- LAST INTENT
+            CASE WHEN rn_repeat = 1 THEN last_intent ELSE NULL END AS a_last,
+            CASE WHEN rn_repeat = 2 THEN last_intent ELSE NULL END AS b_last,
+            CASE WHEN rn_repeat = 3 THEN last_intent ELSE NULL END AS c_last,
+            CASE WHEN rn_repeat = 4 THEN last_intent ELSE NULL END AS d_last,
+            CASE WHEN rn_repeat = 5 THEN last_intent ELSE NULL END AS e_last,
+            CASE WHEN rn_repeat = 6 THEN last_intent ELSE NULL END AS f_last,
+            CASE WHEN rn_repeat = 7 THEN last_intent ELSE NULL END AS g_last,
+            CASE WHEN rn_repeat = 8 THEN last_intent ELSE NULL END AS h_last,
+
+            -- HO
+            CASE WHEN rn_repeat = 1 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_a,
+            CASE WHEN rn_repeat = 2 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_b,
+            CASE WHEN rn_repeat = 3 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_c,
+            CASE WHEN rn_repeat = 4 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_d,
+            CASE WHEN rn_repeat = 5 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_e,
+            CASE WHEN rn_repeat = 6 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_f,
+            CASE WHEN rn_repeat = 7 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_g,
+            CASE WHEN rn_repeat = 8 AND endreason_ivr = '1' THEN 1 ELSE NULL END AS ho_h
+
+        FROM (
+            SELECT
+                gsmno,
+                logmasterid_ivr,
+                pdate,
+                starttime1,
+                endreason_ivr,
+                is_postpaid,
+                is_dtmf,
+                is_smart,
+                rn_repeat,
+                CASE WHEN last_intent IS NULL THEN 'NO_KPI' ELSE last_intent END AS last_intent,
+                CASE WHEN meaningful_intent IS NULL THEN 'NO_KPI' ELSE meaningful_intent END AS meaningful_intent
+
+            FROM (
+                SELECT
+                    gsmno,
+                    logmasterid_ivr,
+                    pdate,
+                    starttime1,
+                    endreason_ivr,
+                    meaningful_intent,
+                    is_postpaid,
+                    is_dtmf,
+                    is_smart,
+                    last_intent,
+                    ROW_NUMBER() OVER (PARTITION BY gsmno, pdate ORDER BY starttime1 ASC) AS rn_repeat
+
+                FROM (
+                    SELECT DISTINCT
+                        logmasterid_ivr,
+                        gsmno,
+                        starttime1,
+                        pdate,
+                        meaningful_intent,
+                        last_intent,
+                        endreason_ivr,
+                        is_postpaid,
+                        is_dtmf,
+                        is_smart
+
+                    FROM (
+                        SELECT
+                            logmasterid AS logmasterid_ivr,
+                            adjusted_gsm AS gsmno,
+                            starttime AS starttime1,
+                            endreason AS endreason_ivr,
+                            pdate,
+                            CASE WHEN LOWER(description) LIKE '%postpaid%' THEN 1 ELSE 0 END AS is_postpaid,
+                            CASE WHEN LOWER(description) LIKE '%dtmf%' THEN 1 ELSE 0 END AS is_dtmf
+                        FROM skyline.customer_journey_ivr
+                        WHERE logoperationid = '6263'
+                          AND ivrflowno IN ('110','111','112','113','114','115','116','117','118','119')
+                          AND pdate BETWEEN 20250301 AND 20250331
+                    ) tobi
+                    LEFT JOIN (
+                        SELECT DISTINCT
+                            logmasterid AS logmasterid_intent,
+                            meaningful_intent,
+                            last_intent,
+                            tobi_group_name,
+                            ivr_group_name
+                        FROM serkal.overall_intents_mar
+                        WHERE pdate BETWEEN 20250301 AND 20250331
+                    ) intents
+                    ON tobi.logmasterid_ivr = intents.logmasterid_intent
+                ) main
+            ) repeat_data2
+        ) repeat_data3
+    ) repeat_data4
+) repeat_data5
+
+GROUP BY
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    ho_a2, ho_b2, ho_c2, ho_d2, ho_e2, ho_f2, ho_g2, ho_h2,
+    a_last, b_last, c_last, d_last, e_last, f_last, g_last, h_last,
+    dtmf_a2, dtmf_b2, dtmf_c2, dtmf_d2, dtmf_e2, dtmf_f2, dtmf_g2, dtmf_h2,
+    ogun_kaccagri,
+    is_postpaid;
