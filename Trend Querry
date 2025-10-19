@@ -1,0 +1,74 @@
+SELECT
+    month,
+    ivr_pdate,
+
+    SUM(count) AS total_inc,
+    SUM(lost_cust_ident_999) AS hangup_cust_inc,
+
+    -- Routed to Other Languages
+    SUM(english_ivr) + SUM(arabic_ivr) AS routed_other_lang_inc,
+    SUM(english_ivr) AS english_ivr_inc,
+    SUM(arabic_ivr) AS arabic_ivr_inc,
+
+    -- Business IVR
+    SUM(corporate_ivr) + SUM(bond_ivr) AS routed_business_ivr_inc,
+    SUM(corporate_ivr) AS corporate_ivr_inc,
+    SUM(bond_ivr) AS bond_ivr_inc,
+
+    -- Hang Up / Failover
+    SUM(hangup) AS cust_hangup_inc,
+    SUM(failover) AS failover_inc,
+
+    -- Fixed IVR
+    SUM(fixed_ivr_beforedv) + SUM(fixed_ivr_noncustomer) AS total_fixed_ivr_inc,
+    SUM(fixed_ivr_beforedv) AS beforedv_fixed_ivr_inc,
+    SUM(fixed_ivr_noncustomer) AS noncustomer_fixed_ivr_inc,
+
+    -- Non Customer
+    SUM(non_cust_ivr) AS non_cust_ivr_inc,
+
+    -- Routed to Other Flows
+    SUM(post_light_ivr) + SUM(pre_light_ivr) + SUM(inc_out_roam_ivr) +
+    SUM(mnp_ivr) + SUM(fc_ivr) + SUM(dsbl_ivr) + SUM(real_other) AS routed_other_flow,
+
+    SUM(post_light_ivr) AS post_light_ivr,
+    SUM(pre_light_ivr) AS pre_light_ivr,
+    SUM(inc_out_roam_ivr) AS inc_out_roam_ivr,
+    SUM(mnp_ivr) AS mnp_ivr,
+    SUM(fc_ivr) AS fc_ivr,
+    SUM(dsbl_ivr) AS dsbl_ivr,
+    SUM(real_other) AS real_other,
+
+    -- Smart IVR
+    SUM(smart_ivr_digital_tuslama_yapan) AS smart_ivr_inc,
+    SUM(direct_dtmf_tobi) + SUM(direct_dtmf_other) AS direct_dtmf_inc,
+    SUM(dv_hata) AS tv_hang_up,
+
+    -- Voice Assistant
+    SUM(reinvention_ivr) - SUM(smart_ivr_digital_tuslama_yapan) - SUM(direct_dtmf_tobi) AS total_voice_inc,
+
+    -- Routed Reinvention IVR
+    SUM(reinvention_ivr) - SUM(smart_ivr_digital_tuslama_yapan) - SUM(direct_dtmf_tobi) AS routed_reinvention_ivr_inc,
+
+    -- Lost during Tobi
+    SUM(reinvention_ivr) - SUM(smart_ivr_digital_tuslama_yapan) - SUM(direct_dtmf_tobi) - SUM(inc_calls_tv_reinvention) AS lost_during_tobi_inc,
+
+    SUM(inc_calls_tv_reinvention) AS incoming_voice_tobi_inc,
+    SUM(inc_calls_tv_2_reinvention) AS fixivr_indv_tobi_inc,
+
+    SUM(inc_calls_tv_reinvention) - SUM(routed_hbrt_reinvention) +
+    SUM(smart_ivr_digital_tuslama_yapan) + SUM(direct_dtmf_tobi) -
+    SUM(inc_calls_tv_2_reinvention) AS only_voice_tobi_inc,
+
+    SUM(routed_hbrt_reinvention) - SUM(smart_ivr_digital_tuslama_yapan) -
+    SUM(direct_dtmf_tobi) AS routed_dtmf_tobi_inc
+
+FROM (
+    -- Alt sorgu buraya gelecek (bir sonraki mesajda)
+) AS ivr_caller
+
+GROUP BY
+    month, ivr_pdate
+
+ORDER BY
+    month, ivr_pdate;
